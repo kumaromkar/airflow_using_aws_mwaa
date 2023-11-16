@@ -4,5 +4,10 @@ apache-airflow-providers-airbyte==3.2.0
 apache-airflow-providers-slack==7.2.0
 virtualenv==20.17.1
 
+#dbt
 dbt-core
-pandas
+dbt-postgres
+dbt-redshift
+
+#other
+pandas==1.5.2
