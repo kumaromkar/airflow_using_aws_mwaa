@@ -1,5 +1,12 @@
---constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.7.2/constraints-3.11.txt"
+# --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.7.2/constraints-3.11.txt"
 
-apache-airflow-providers-snowflake==5.0.1
-apache-airflow-providers-mysql==5.3.1
+apache-airflow-providers-airbyte==3.3.2
+apache-airflow-providers-slack==8.1.0
+virtualenv==20.24.5
 
+#dbt
+dbt-core==1.7.7
+dbt-redshift
+
+#other
+pandas==2.1.1
