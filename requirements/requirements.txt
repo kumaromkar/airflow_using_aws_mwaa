@@ -4,10 +4,6 @@ apache-airflow-providers-airbyte==3.5.1
 apache-airflow-providers-slack==8.5.1
 virtualenv==20.25.0
 
-#dbt
-# dbt-core==1.8.0b1
-# dbt-redshift==1.8.0b1
-
 #other
 pandas==2.1.4
 geoip2==4.8.0
