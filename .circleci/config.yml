@@ -1,0 +1,183 @@
+version: 2.1
+
+# === Executors === #
+
+job-defaults: &job-defaults
+    machine:
+      image: ubuntu-2204:2023.10.1
+      docker_layer_caching: true
+    working_directory: ~/mft
+
+scan-defaults: &scan-defaults
+    docker:
+      image: ghcr.io/orcasecurity/orca-cli:1.10.1
+      docker_layer_caching: true
+    working_directory: ~/mft
+
+# === Templates === #
+
+setup-env: &setup-env
+  run:
+    name: Setup AWS access
+    command: ./.circleci/setup-aws-config.sh
+
+setup-docker: &setup-docker
+  run:
+    name: Setup AWS ECR docker repository credentials
+    command: |
+      unset AWS_ACCESS_KEY_ID; unset AWS_SECRET_ACCESS_KEY; ./ops/docker-login.sh
+
+build-docker-image: &build-docker-image
+  run:
+    name: Build the aws/mwaa-local docker image
+    command: |
+      ./mwaa-local-env build-image
+      docker image tag aws/mwaa-local:2_8 190066226418.dkr.ecr.us-east-1.amazonaws.com/aws/mwaa-local:2_8
+
+scan-docker-image: &scan-docker-image
+  run:
+    name: Run orca-scan on the aws/mwaa-local docker image
+    command: |
+      orca-cli --containerized-mode image scan -p aws-mwaa-local-runner --api-token ${ORCA_API_TOKEN} 190066226418.dkr.ecr.us-east-1.amazonaws.com/aws/mwaa-local:2_8
+
+deploy-docker-image: &deploy-docker-image
+  run:
+    name: Push the aws/mwaa-local docker image to ECR
+    command: |
+      docker image push 190066226418.dkr.ecr.us-east-1.amazonaws.com/aws/mwaa-local:2_8
+
+# === Orbs === #
+
+orbs:
+  jira: circleci/jira@1.3.1
+  slack: circleci/slack@4.1
+
+# === Scheduled Pipeline Parameters === #
+
+parameters:
+  nightly-security-scan:
+    type: boolean
+    default: false
+
+# === Jobs === #
+
+jobs:
+
+  build: # build the aws-mwaa-local-runner docker image
+
+    <<: *job-defaults
+    steps:
+      - checkout
+      - <<: *setup-env
+      - <<: *setup-docker
+      - <<: *build-docker-image
+
+  scan: # run an orca-scan on the aws-mwaa-local-runner docker image
+
+    <<: *scan-defaults
+    steps:
+      - <<: *scan-docker-image
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+          channel: "#wiki-team-managed-file-transfer"
+
+  deploy-snapshot: # push the aws-mwaa-local-runner docker image into ECR
+
+    <<: *job-defaults
+    steps:
+      - checkout
+      - <<: *setup-env
+      - <<: *setup-docker
+      - <<: *deploy-docker-image
+
+  scan-sast-pr: # run a fast semgrep scan on the aws-mwaa-local-runner repository
+
+    parameters:
+      default_branch:
+        type: string
+        default: main
+    environment:
+      SEMGREP_REPO_URL: << pipeline.project.git_url >>
+      SEMGREP_BRANCH: << pipeline.git.branch >>
+      SEMGREP_BASELINE_REF: << parameters.default_branch >>
+    docker:
+      - image: returntocorp/semgrep
+    steps:
+      - checkout
+      - run:
+          name: "Semgrep code scan"
+          command: semgrep ci
+
+  scan-sast-full: # run a full semgrep scan on the aws-mwaa-local-runner repository
+
+    parameters:
+      default_branch:
+        type: string
+        default: main
+    environment:
+      SEMGREP_REPO_URL: << pipeline.project.git_url >>
+      SEMGREP_BRANCH: << pipeline.git.branch >>
+    docker:
+      - image: returntocorp/semgrep
+    steps:
+      - checkout
+      - run:
+          name: "Semgrep code scan"
+          command: semgrep ci
+
+# === Workflows === #
+
+workflows:
+  version: 2
+
+  build-scan-and-deploy: # Workflow to build aws-mwaa-local-runner image
+
+    when:
+      not: << pipeline.parameters.nightly-security-scan >>
+    jobs:
+      - build:
+          context:
+          - circleci
+      - scan:
+          context:
+          - circleci
+          - slack-secrets
+          requires:
+            - build
+      - deploy-snapshot:
+          context:
+          - circleci
+          - slack-secrets
+          requires:
+            - build
+            - scan
+          filters:
+            branches:
+              only:
+              - main
+      - scan-sast-pr:
+          context:
+            - security-tools
+            - circleci
+          filters:
+            branches:
+              ignore:
+              - main
+      - scan-sast-full:
+          context:
+            - security-tools
+            - circleci
+          filters:
+            branches:
+              only:
+              - main
+
+  scheduled-security-scan:  # Workflow for scheduled security scans
+
+    when: << pipeline.parameters.nightly-security-scan >>
+    jobs:
+      - scan-sast-full:
+          context:
+            - security-tools
+            - circleci
