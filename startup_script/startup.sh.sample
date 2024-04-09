@@ -34,6 +34,8 @@ python3.11 -m pip install dbt-core==1.8.0b1 dbt-redshift==1.8.0b1
 dbt --version
 deactivate
 
+echo "export DBT_PROFILE_TARGET='dev'" >> /usr/local/airflow/envs/.virtualenv-dbt/bin/activate
+
 echo "Deactivate DBT Virtual Environment"
 pyenv shell system
 pyenv global system
