@@ -31,7 +31,7 @@ def task_failure_slack_alert(context):
         *Log URL*: <{LOG_URL}|*Logs*>
     """
 
-    SLACK_FAILURE_ALERT_CONN_ID = "slack_dms_monitor"
+    SLACK_FAILURE_ALERT_CONN_ID = "slack_data_alerts"
     CHANNEL = BaseHook.get_connection(SLACK_FAILURE_ALERT_CONN_ID).login
 
     slack_alert = SlackWebhookOperator(
@@ -54,6 +54,7 @@ default_args = {
     dag_id="example_taskflow_api",
     description="Taskflow api example",
     schedule=None,
+    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     default_args = default_args,
     catchup=False,
     on_success_callback=None,
