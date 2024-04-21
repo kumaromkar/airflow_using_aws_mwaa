@@ -139,6 +139,8 @@ For example usage see [Installing Python dependencies using PyPi.org Requirement
 - There is a directory at the root of this repository called plugins. 
 - In this directory, create a file for your new custom plugin.
 - Add any Python dependencies to `requirements/requirements.txt`.
+- Adds a local `constraints.txt` file to the `plugins/` directory, this is zipped together into the `plugins.zip` artifact.
+- Creates a new `packaged_requirements.txt` file with the correct configuration for `--find-links` and `--constraint`.
 
 **Note**: this step assumes you have a DAG that corresponds to the custom plugin. For example usage [MWAA Code Examples](https://docs.aws.amazon.com/mwaa/latest/userguide/sample-code.html).
 
