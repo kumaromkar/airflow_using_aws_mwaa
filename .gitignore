@@ -5,3 +5,7 @@ dags/**/*.pyc
 /logs
 /db-data
 .DS_Store
+
+# MoveRDC-specific
+plugins/*.whl
+plugins/*.tar.gz
