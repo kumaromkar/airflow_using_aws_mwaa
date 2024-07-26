@@ -63,7 +63,7 @@ cd aws-mwaa-local-runner
 ### Step one: Building the Docker image
 #### For Windows Users Only
 
-If you are using Windows, you may need to run the following commands to adjust line endings in the script files before starting the script. Windows often modifies line endings in .sh files, which can cause issues. The commands below will convert the line endings to Unix format:
+If you are using Windows, you may need to run the following commands to adjust line endings in the script files before building the docker image. Windows often modifies line endings in .sh files, which can cause issues. The commands below will convert the line endings to Unix format:
 
 ```bash
 sed -i -e 's/\r$//' docker/script/bootstrap.sh
