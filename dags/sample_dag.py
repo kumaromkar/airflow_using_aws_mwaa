@@ -8,14 +8,13 @@ default_args = {
     'depends_on_past': False,
     'start_date': datetime(2024, 8, 21),
     'retries': 1,
-    'retry_delay': timedelta(minutes=5),
 }
 
 dag = DAG(
-    'testing_dag',
+    'sample_dag',
     default_args=default_args,
     schedule_interval=timedelta(days=1),
-    tags=['testing']
+    tags=['sample_dag']
 )
 
 def print_hello(**kwargs):
@@ -23,7 +22,6 @@ def print_hello(**kwargs):
 
 def print_goodbye(**kwargs):
     print("Goodbye, World!")
-
 
 task1 = PythonOperator(
     task_id='print_hello',
