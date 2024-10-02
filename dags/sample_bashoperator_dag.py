@@ -16,8 +16,10 @@ import pytz
 with DAG(
     dag_id='sample_bash_operator',
     start_date=datetime(2024,8,31,tzinfo=pytz.UTC),
+    end_date=datetime(2024,9,15,tzinfo=pytz.UTC),
     schedule="30 12 * * *",
     max_active_runs=1,
+    catchup=True,
     tags=['sample_bash_operator'],
 ) as dag:
     
